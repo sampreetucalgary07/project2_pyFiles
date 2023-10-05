@@ -5,17 +5,15 @@ import torch
 class simpleFCN(nn.Module):
     def __init__(self, first_dim, last_dim):
         super().__init__()
-        # self.flatten = nn.Flatten()
         self.divide_2 = int(first_dim / 2)
-        # print(self.divide_2)
-        self.multiply2 = int(first_dim * 2)
-        # print(self.multiply2)
+        self.multiply2 = int(first_dim + 2)
+        self.sub2 = int(first_dim - 2)
         self.linear_model = nn.Sequential(
-            nn.Linear(first_dim, self.multiply2),
+            nn.Linear(first_dim,  self.sub2),
             nn.ReLU(),
-            nn.Linear(self.multiply2, first_dim),
+            nn.Linear(self.sub2, self.divide_2),
             nn.ReLU(),
-            nn.Linear(first_dim, last_dim)
+            nn.Linear(self.divide_2, last_dim)
         )
 
     def forward(self, x1, x2):
