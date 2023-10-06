@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from subImage import get_sub_image, patch_sizes, append_patch_no, get_tensor
 
 
-def predict_patch_test(l0_sub, r1_sub, model, sub_image_size=64, data_loader_inst=False, scaled=False):
+def predict_patch_test(l0_sub, r1_sub, model, sub_image_size, applyFunc, data_loader_inst=False, scaled=False):
     sub_patch_list = patch_sizes(sub_image_size, 1)
     pred_img_sub = torch.zeros((sub_image_size, sub_image_size, 3))
     min_value = 1
@@ -16,8 +16,8 @@ def predict_patch_test(l0_sub, r1_sub, model, sub_image_size=64, data_loader_ins
         l0_n_sub = get_sub_image(
             l0_sub, sub_patch, data_loader_inst=data_loader_inst)
 
-        l0_n_sub = append_patch_no(subTensor=l0_n_sub, patch_no=p_no)
-        r1_n_sub = append_patch_no(subTensor=r1_n_sub, patch_no=p_no)
+        l0_n_sub = applyFunc(subTensor=l0_n_sub, patch_no=p_no, img_type=0.0)
+        r1_n_sub = applyFunc(subTensor=r1_n_sub, patch_no=p_no, img_type=1.0)
 
         pred_img_sub[sub_patch[0]:sub_patch[1], sub_patch[2]:sub_patch[3], :] = model(l0_n_sub, r1_n_sub)[:, :3]
 

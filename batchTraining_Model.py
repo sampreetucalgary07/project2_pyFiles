@@ -1,11 +1,12 @@
 
 from subImage import get_sub_image, patch_sizes, append_patch_no, get_tensor
+from tqdm import tqdm
 
 
-def training_model_pixel(trainR0, trainL0, trainR1, model, patch_list, criterion, epochs, opt):
-    # print(model)
-    # print(patch_list)
-
+def training_model_pixel(trainR0, trainL0, trainR1, model, patch_list,
+                         applyFunc, applyFuncR0,
+                         criterion, epochs, opt,
+                         ):
     epoch_list = []
     loss_list = []
     sub_image_size = int(patch_list[1] - patch_list[0])
@@ -32,9 +33,12 @@ def training_model_pixel(trainR0, trainL0, trainR1, model, patch_list, criterion
                 l0_64_sub = get_sub_image(
                     l0_sub, sub_patch_list, data_loader_inst=False)
 
-                r0_64_sub = get_tensor(subTensor=r0_64_sub)
-                l0_64_sub = append_patch_no(subTensor=l0_64_sub, patch_no=p_no)
-                r1_64_sub = append_patch_no(subTensor=r1_64_sub, patch_no=p_no)
+                r0_64_sub = applyFuncR0(subTensor=r0_64_sub)
+                l0_64_sub = applyFunc(
+                    subTensor=l0_64_sub, patch_no=p_no, img_type=0.0)
+                r1_64_sub = applyFunc(
+                    subTensor=r1_64_sub, patch_no=p_no, img_type=1.0)
+
                 outputs = model(l0_64_sub, r1_64_sub)
                 loss = criterion(outputs, r0_64_sub)
                 loss.backward()

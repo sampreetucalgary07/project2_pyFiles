@@ -1,4 +1,18 @@
 from models import simpleFCN
+import torch.optim as optim
+
+
+def model_list_sample(p_list, m_list, num_sample):
+    """function to get one particular sample of model and patch list"""
+    p_list_n = {
+        list(p_list.keys())[num_sample -
+                            1]: list(p_list.values())[num_sample - 1]
+    }
+    m_list_n = {
+        list(m_list.keys())[num_sample -
+                            1]: list(m_list.values())[num_sample - 1]
+    }
+    return m_list_n, p_list_n
 
 
 class allTraining():
@@ -25,23 +39,23 @@ class allTraining():
         print(f"\n{len(self.model_list)} Models initialized")
         return self.model_list
 
-    def whole_training(self, model_list, patch_size_list, criterion, epochs, training_model):
+    def whole_training(self, model_list, patch_size_list, criterion, epochs, training_model, applyFunc, applyFuncR0):
         self.model_list = model_list
         data_rec = {}
         patch_list = {}
-        print(f"\n{self.num_patch} no. of models will be trained. ")
-        for p in range(self.num_patch):
-
-            model = self.model_list['model_'+str(p+1)]
-            patch = patch_size_list['Patch_'+str(p+1)]
-            patch_list['Patch_'+str(p+1)] = patch
+        print(f"\n{len(self.model_list)} no. of models will be trained. ")
+        for p, (model_key, patch_key) in enumerate(zip(self.model_list, patch_size_list)):
+            model = self.model_list[model_key]
+            patch = patch_size_list[patch_key]
+            patch_list[patch_key] = patch
             print(
-                f"\nModel No. {p+1} | Patch No. {p+1} | Patch Size : {patch}")
+                f"\nModel : {model_key} | Patch : {patch_key} | Patch Size : {patch}")
             print(f"Training started .... ")
             # print(model)
             # print(patch_list)
-            epoch_list, loss_list = training_model(self.trainR0, self.trainL0, self.trainR1, model, patch, criterion, epochs,
-                                                   opt=optim.Adam(model.parameters(), lr=0.00001))
+            epoch_list, loss_list = training_model(self.trainR0, self.trainL0, self.trainR1, model, patch,
+                                                   applyFunc, applyFuncR0,
+                                                   criterion, epochs, opt=optim.Adam(model.parameters(), lr=0.0001), )
 
             data_rec['M'+str(p+1)] = list((epoch_list, loss_list))
             print(f"Training no. ended .... \n\n\n")

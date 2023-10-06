@@ -35,7 +35,7 @@ def patch_sizes(image_max_dim, sub_image_size, log=False):
     return patch_size_list
 
 
-def append_patch_no(subTensor, patch_no):
+def append_pos(subTensor, patch_no, img_type=None):
     """Func. to append location/index to an single pixel tensor"""
 
     patch_no_t = torch.tensor([patch_no])
@@ -44,10 +44,16 @@ def append_patch_no(subTensor, patch_no):
     return tensor_with_point
 
 
-def get_tensor(subTensor):
+def get_tensor(subTensor, patch_no=None, img_type=None):
     tensor_with_point = subTensor.view(1, 3)  # 1,3 is the size of the tensor
     return tensor_with_point
 
 
-def append_posEmbed(subTensor, pos):
-    pass
+def append_posAndImg(subTensor, patch_no, img_type=None):
+    """Func. to append location/index + image type to an single pixel tensor"""
+
+    patch_no_t = torch.tensor([patch_no])
+    img_type_t = torch.tensor([img_type])
+    tensor_with_point = torch.cat(
+        (subTensor.view(1, 3), patch_no_t.view(1, len(patch_no_t)), img_type_t.view(1, len(img_type_t))), dim=1)
+    return tensor_with_point
