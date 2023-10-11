@@ -1,4 +1,6 @@
 import torch
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def get_sub_image(img, patch_list, print_size=False, data_loader_inst=True):
@@ -57,3 +59,34 @@ def append_posAndImg(subTensor, patch_no, img_type=None):
     tensor_with_point = torch.cat(
         (subTensor.view(1, 3), patch_no_t.view(1, len(patch_no_t)), img_type_t.view(1, len(img_type_t))), dim=1)
     return tensor_with_point
+
+
+def create_difference_heatmap(image1, image2, title, cmap='hot', alpha=0.85, show=True):
+    """
+    Create a heat map highlighting pixel differences between two images and display percentage difference.
+    """
+    # Convert the PyTorch tensors to NumPy arrays
+    if type(image1) != np.ndarray:
+        image1 = image1.numpy()
+    if type(image2) != np.ndarray:
+        image2 = image2.numpy()
+    # Calculate pixel-wise absolute differences between the two images
+    diff_image = np.abs(image1 - image2)
+    diff_image_sum = np.sum(diff_image, axis=2)
+    # Calculate percentage difference
+    percentage_diff = (np.sum(diff_image_sum) /
+                       np.sum(np.sum(image1, axis=2))) * 100
+    # Create a heat map using the difference values
+    if show:
+        plt.imshow(diff_image_sum, cmap=cmap, alpha=alpha)
+        # add info contains both percentage diff and total diff
+        additional_info = f"Percentage Difference: {np.mean(percentage_diff):.4f}%\nTotal Difference: {np.sum(diff_image_sum):.3f}"
+        info_x = 0.5  # X-coordinate (normalized)
+        info_y = -0.02  # Y-coordinate (normalized)
+        plt.figtext(info_x, info_y, additional_info, fontsize=9, ha='center')
+        # Add a colorbar for reference
+        plt.colorbar()
+        plt.title(title, fontsize=11)
+        # Display the heat map
+        plt.show()
+    return np.mean(percentage_diff), np.sum(diff_image_sum)
