@@ -90,3 +90,30 @@ def create_difference_heatmap(image1, image2, title, cmap='hot', alpha=0.85, sho
         # Display the heat map
         plt.show()
     return np.mean(percentage_diff), np.sum(diff_image_sum)
+
+
+class neighbourPixels():
+    def __init__(self, sub_image_size):
+        self.sub_image_size = sub_image_size
+
+    def returnNeigbourPixels(self, i, j):
+        return [(i, j), (i+1, j), (i+1, j+1), (i, j+1), (i-1, j+1), (i-1, j), (i-1, j-1), (i, j-1), (i+1, j-1)]
+
+    def checkPixels(self, n_list_values):
+        for pixel in n_list_values:
+            # print(pixel)
+            if -1 in pixel:
+                n_list_values[n_list_values.index(pixel)] = (0, 0)
+                continue
+            if 64 in pixel:
+                n_list_values[n_list_values.index(pixel)] = (0, 0)
+        return n_list_values
+
+    def neighbour9Pixels(self):
+        n_list = {}
+        for i in range(self.sub_image_size):
+            for j in range(self.sub_image_size):
+                n_list[(i, j)] = self.returnNeigbourPixels(i, j)
+                n_list[(i, j)] = self.checkPixels(n_list[(i, j)])
+
+        return n_list
