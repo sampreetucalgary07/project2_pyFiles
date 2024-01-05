@@ -32,14 +32,14 @@ class allTraining():
             self.num_patch = num_patch
         print("\nNo. of Models/patches selected : ", self.num_patch)
 
-    def model_init(self, first_dim, last_dim):
+    def model_init(self, model, first_dim, last_dim):
         self.model_list = {}
         for i in range(self.num_patch):
-            self.model_list['model_'+str(i+1)] = simpleFCN(first_dim, last_dim)
+            self.model_list['model_'+str(i+1)] = model(first_dim, last_dim)
         print(f"\n{len(self.model_list)} Models initialized")
         return self.model_list
 
-    def whole_training(self, model_list, patch_size_list, criterion, epochs, training_model, applyFunc, applyFuncR0):
+    def whole_training(self, model_list, patch_size_list, criterion, epochs, training_model, applyFunc=None, applyFuncR0=None):
         self.model_list = model_list
         data_rec = {}
         patch_list = {}

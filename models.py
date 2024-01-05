@@ -48,6 +48,29 @@ class simpleFCN_single(nn.Module):
         return self.linear_model(x1)
 
 
+class simpleFCN_neigbour(nn.Module):
+    """simple fully connected neural network with 3 hidden layers"""
+
+    def __init__(self, first_dim, last_dim):
+        super().__init__()
+        # self.divide_2 = int(first_dim / 2)
+        # self.multiply2 = int(first_dim + 2)
+        # self.sub2 = int(first_dim - 2)
+        self.linear_model = nn.Sequential(
+            nn.Linear(first_dim,  27),
+            nn.ReLU(),
+            nn.Linear(27, 9),
+            nn.ReLU(),
+            nn.Linear(9, last_dim)
+        )
+
+    def forward(self, x1, x2):
+        combined = torch.cat((x1, x2), dim=0)
+        # print(combined.size())
+        flat_image = self.linear_model(combined)
+        return flat_image
+
+
 def model_save(model_list, patch_list, path, override=False):
     """saving models in the model_list and patch_list as pickle file in the path given"""
     if not os.path.exists(path):

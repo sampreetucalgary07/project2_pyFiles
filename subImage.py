@@ -18,7 +18,7 @@ def get_sub_image(img, patch_list, print_size=False, data_loader_inst=True):
     return subImage
 
 
-def patch_sizes(image_max_dim, sub_image_size, log=False):
+def get_patchSize_list(image_max_dim, sub_image_size, log=False):
     """ Given an image max dim and sub_image_size,
     returns a dictionary with the patch sizes values in a list
     For eg. {'Patch_1': [0, 64, 0, 64]}"""
@@ -93,8 +93,8 @@ def create_difference_heatmap(image1, image2, title, cmap='hot', alpha=0.85, sho
 
 
 class neighbourPixels():
-    def __init__(self, sub_image_size):
-        self.sub_image_size = sub_image_size
+    def __init__(self, patch_size):
+        self.patch_size = patch_size
 
     def returnNeigbourPixels(self, i, j):
         return [(i, j), (i+1, j), (i+1, j+1), (i, j+1), (i-1, j+1), (i-1, j), (i-1, j-1), (i, j-1), (i+1, j-1)]
@@ -105,14 +105,14 @@ class neighbourPixels():
             if -1 in pixel:
                 n_list_values[n_list_values.index(pixel)] = (0, 0)
                 continue
-            if 64 in pixel:
+            if 256 in pixel:
                 n_list_values[n_list_values.index(pixel)] = (0, 0)
         return n_list_values
 
     def neighbour9Pixels(self):
         n_list = {}
-        for i in range(self.sub_image_size):
-            for j in range(self.sub_image_size):
+        for i in range(self.patch_size[0], self.patch_size[1]):
+            for j in range(self.patch_size[2], self.patch_size[3]):
                 n_list[(i, j)] = self.returnNeigbourPixels(i, j)
                 n_list[(i, j)] = self.checkPixels(n_list[(i, j)])
 

@@ -1,11 +1,11 @@
 
 import torch
 import matplotlib.pyplot as plt
-from subImage import get_sub_image, patch_sizes, get_tensor, append_posAndImg, append_pos
+from subImage import get_sub_image, get_patchSize_list, get_tensor, append_posAndImg, append_pos
 
 
 def predict_patch_test(l0_sub, r1_sub, model, sub_image_size, applyFunc, data_loader_inst=False, scaled=False):
-    sub_patch_list = patch_sizes(sub_image_size, 1)
+    sub_patch_list = get_patchSize_list(sub_image_size, 1)
     pred_img_sub = torch.zeros((sub_image_size, sub_image_size, 3))
     min_value = 1
     max_value = len(list(sub_patch_list.values()))
@@ -19,7 +19,7 @@ def predict_patch_test(l0_sub, r1_sub, model, sub_image_size, applyFunc, data_lo
         l0_n_sub = applyFunc(subTensor=l0_n_sub, patch_no=p_no, img_type=0.0)
         r1_n_sub = applyFunc(subTensor=r1_n_sub, patch_no=p_no, img_type=1.0)
 
-        pred_img_sub[sub_patch[0]:sub_patch[1], sub_patch[2]                     :sub_patch[3], :] = model(l0_n_sub, r1_n_sub)[:, :3]
+        pred_img_sub[sub_patch[0]:sub_patch[1], sub_patch[2]:sub_patch[3], :] = model(l0_n_sub, r1_n_sub)[:, :3]
 
     min_r0_sub = torch.min(r1_sub)
     max_r0_sub = torch.max(r1_sub)
@@ -36,7 +36,7 @@ def predict_patch_test(l0_sub, r1_sub, model, sub_image_size, applyFunc, data_lo
 
 
 def pred_patch_single(r1_sub, model, sub_image_size, applyFunc, data_loader_inst=False, scaled=False):
-    sub_patch_list = patch_sizes(sub_image_size, 1)
+    sub_patch_list = get_patchSize_list(sub_image_size, 1)
     pred_img_sub = torch.zeros((sub_image_size, sub_image_size, 3))
     min_value = 1
     max_value = len(list(sub_patch_list.values()))
@@ -46,7 +46,7 @@ def pred_patch_single(r1_sub, model, sub_image_size, applyFunc, data_loader_inst
             r1_sub, sub_patch, data_loader_inst=data_loader_inst)
         r1_n_sub = applyFunc(subTensor=r1_n_sub, patch_no=p_no, img_type=1.0)
 
-        pred_img_sub[sub_patch[0]:sub_patch[1], sub_patch[2]                     :sub_patch[3], :] = model(r1_n_sub)[:, :3]
+        pred_img_sub[sub_patch[0]:sub_patch[1], sub_patch[2]:sub_patch[3], :] = model(r1_n_sub)[:, :3]
 
     min_r0_sub = torch.min(r1_sub)
     max_r0_sub = torch.max(r1_sub)
@@ -60,6 +60,30 @@ def pred_patch_single(r1_sub, model, sub_image_size, applyFunc, data_loader_inst
 
     else:
         return pred_img_sub
+
+
+def pred_patch_Neighbour(l0, r1, model, patch_list, sub_image_size=64,
+                         data_loader_inst=False):
+    # sub_patch_list = get_patchSize_list(sub_image_size, 1)
+    pred_img_sub = torch.zeros((sub_image_size, sub_image_size, 3))
+    n_list = neighbourPixels(patch_list).neighbour9Pixels()
+    n = 1
+    print(pred_img_sub.size())
+    for (pixel, sub_patch) in zip(n_list, get_patchSize_list(sub_image_size, 1).values()):
+        tensor_values = torch.tensor(
+            [pixel[0], pixel[1]], dtype=torch.float32)
+        l0_64_sub = tensor_values / 255.0
+        r1_64_sub = tensor_values / 255.0
+        # For L0
+        for i in n_list[pixel]:
+            l0_64_sub = torch.cat(
+                (l0_64_sub, l0[i[0], i[1]]), dim=0)
+        # For R1
+        for i in n_list[pixel]:
+            r1_64_sub = torch.cat(
+                (r1_64_sub, r1[i[0], i[1]]), dim=0)
+        pred_img_sub[sub_patch[0]:sub_patch[1], sub_patch[2]:sub_patch[3], :] = model(l0_64_sub, r1_64_sub)
+    return pred_img_sub
 
 
 def all_model_pred(model_list, patch_list, img_L0_test, img_R1_test, applyFunc, sub_image_size=64, log=True, scaled=False):
@@ -87,6 +111,18 @@ def all_model_pred_single(model_list, patch_list, img_R1_test, applyFunc, sub_im
             print(f"Model No. {i+1} | Patch No. {i+1} | Patch Size : {patch}")
         pred_img[patch[0]:patch[1], patch[2]:patch[3], :] = pred_patch_single(
             img_R1_test_sub, model, sub_image_size=sub_image_size, applyFunc=applyFunc, data_loader_inst=False, scaled=scaled)
+    pred_img = pred_img.detach().numpy()
+
+    return pred_img
+
+
+def all_model_pred_Neighbour(img_L0_test, img_R1_test, model_list, patch_list, sub_image_size=64, log=True, scaled=False):
+    pred_img = torch.zeros((256, 256, 3))
+    for i, (model, patch) in enumerate(zip(model_list.values(), patch_list.values())):
+        if log:
+            print(f"Model No. {i+1} | Patch No. {i+1} | Patch Size : {patch}")
+        pred_img[patch[0]:patch[1], patch[2]:patch[3], :] = pred_patch_Neighbour(img_L0_test, img_R1_test, model=model,
+                                                                                 patch_list=patch, sub_image_size=64, data_loader_inst=False)
     pred_img = pred_img.detach().numpy()
 
     return pred_img
